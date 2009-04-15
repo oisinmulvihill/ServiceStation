@@ -1,0 +1,5 @@
+[service]
+name = Notepad
+command_line = notepad.exe
+working_dir = c:\
+log_file = c:\stdouterr.log

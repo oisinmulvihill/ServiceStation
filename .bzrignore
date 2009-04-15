@@ -1,0 +1,11 @@
+Debug/
+Release/
+servicestation.ilk
+servicestation.sln
+servicestation.exe
+*.log
+*.ncb
+*.suo
+*.idb
+*.pdb
+*.BANTER.oisin.user

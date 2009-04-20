@@ -11,7 +11,7 @@
 name = A1_Notepad
 
 ; Whether or not this service will interact with the desktop (yes | no):
-gui = no
+gui = yes
 
 ; The command line to invoke and run as a service (use of absolute path is recommended):
 command_line = notepad.exe

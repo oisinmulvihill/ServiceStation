@@ -1,6 +1,8 @@
 #include "service.hpp"
 #include "SimpleOpt.h"
 
+#define SERVICESTATION_VERSION "1.0.0"
+
 ServiceBase *service = NULL;
 
 // This will be set up so that windows calls it
@@ -26,10 +28,11 @@ void WINAPI serviceControl(DWORD opcode)
 void ShowUsage() \
 {
     _tprintf(_T("\
-Usage: \
-[-i] Install Service \n \
+Usage: \n \
+[-v] Print out the service station version \n \
 [-c] <absolute path to config.ini> \n \
-[-u] Uninstall \n \
+[-i] Install Service \n \
+[-r] Remove/Uninstall \n \
 [-?] [--help]\n"));
 
 }
@@ -38,11 +41,12 @@ Usage: \
 DWORD main(int argc, char *argv[])
 {
 	// Command line argument setup
-	enum { OPT_HELP, OPT_CFG, OPT_ADD, OPT_DEL };
+	enum { OPT_HELP, OPT_CFG, OPT_ADD, OPT_DEL, OPT_VER };
 	CSimpleOpt::SOption g_rgOptions[] = {
 		// ID       TEXT                TYPE
 		{ OPT_ADD,   _T("-i"),        SO_NONE }, // install service
-		{ OPT_DEL,   _T("-u"),        SO_NONE }, // remove service
+		{ OPT_DEL,   _T("-r"),        SO_NONE }, // remove service
+		{ OPT_VER,   _T("-v"),        SO_NONE }, // service version
 		{ OPT_CFG,   _T("-c"),        SO_REQ_SEP}, // config file to use when installing/removing 
 		{ OPT_HELP,  _T("-?"),        SO_NONE }, // "-?"
 		{ OPT_HELP,  _T("-h"),        SO_NONE }, // "-?"
@@ -51,6 +55,7 @@ DWORD main(int argc, char *argv[])
 	};
 
 	std::string config_file = "config.ini";
+	bool show_version = FALSE;
 	bool install_service = FALSE;
 	bool remove_service = FALSE;
 
@@ -69,6 +74,10 @@ DWORD main(int argc, char *argv[])
                 ShowUsage();
                 return 0;
             }
+			if (args.OptionId() == OPT_VER) 
+			{	
+				show_version = TRUE;
+			}
 			if (args.OptionId() == OPT_ADD) 
 			{	
 				install_service = TRUE;
@@ -87,6 +96,16 @@ DWORD main(int argc, char *argv[])
 			_tprintf(_T("Invalid argument: %s\n"), args.OptionText());
             return 1;
 		}
+	}
+
+	if (show_version) 
+	{
+		std::cout << std::endl \
+			      << "ServiceStation: v" << SERVICESTATION_VERSION << std::endl \
+			      << "Oisin Mulvihill / Folding Software Limited / 2009 " << std::endl \
+				  << "Please see: http://www.foldingsoftware.com/servicestation " \
+				  << std::endl;
+		return 0;
 	}
 
 	// Create the service instance and then decided based on 

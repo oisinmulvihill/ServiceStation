@@ -5,6 +5,7 @@
 
 #define NAME_PATH_MAX_LENGTH 2048
 #define REG_PATH_MAX_LENGTH 2048
+#define SERVICE_DESC_MAX_LENGTH 256
 
 
 #define BUFSIZE 4096 
@@ -31,6 +32,9 @@ class Service : public ServiceBase
 
 	//
 	boolean is_running;
+
+	// Contains yes or no to indicate whether the service interacts with the desktop:
+	std::string has_gui;
 
 	// Where this instances configuration is stored in the registry
 	char registry_path[REG_PATH_MAX_LENGTH];
@@ -63,6 +67,12 @@ protected:
 	// file.
 	//
     int Run();
+
+	// Set a note about what this service does:
+	bool SetDescription(std::string description);
+
+	// true: enable desktop interaction, false: disable interaction.
+	bool InteractiveState(bool interactive_state);
 
 	// Called when its time to stop the service runing.
     void OnStop(void);

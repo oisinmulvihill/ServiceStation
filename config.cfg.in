@@ -1,5 +1,18 @@
 [service]
-name = Notepad
+; The service and display name of this windows service (no spaces please):
+name = A1_Notepad
+
+; Whether or not this service will interact with the desktop (yes | no):
+gui = no
+
+; The command line to invoke and run as a service (use of absolute path is recommended):
 command_line = notepad.exe
+
+; The absolute path to where the command_line will be run from:
 working_dir = c:\
+
+; What this service does and is about:
+description = This is the notepad service: every time its closed it will restart.
+
+; Where to log and output / error output too (not currently working):
 log_file = c:\stdouterr.log

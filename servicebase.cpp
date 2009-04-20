@@ -165,13 +165,17 @@ bool ServiceBase::Install(void)
     char file_path[_MAX_PATH];
     ::GetModuleFileName(NULL, file_path, sizeof(file_path));
 
+
+	// msdn create service ref: 
+	//  http://msdn.microsoft.com/en-us/library/ms682450(VS.85).aspx
+	//
     SC_HANDLE service = CreateService(
         service_manager,
         this->service_name,
         this->service_name,
         SERVICE_ALL_ACCESS,
         SERVICE_WIN32_OWN_PROCESS,
-        SERVICE_DEMAND_START,
+        SERVICE_AUTO_START,
         SERVICE_ERROR_NORMAL,
         file_path,
         NULL,

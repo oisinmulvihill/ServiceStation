@@ -200,8 +200,28 @@ int Service::SetupFromConfiguration(const char *config_filename)
 
 	// Set up the name of this service:
 	//
-	std::string service_name = ini.GetValue("service", "name", "ServiceRunner");
+	std::string service_name = ini.GetValue("service", "name", "ServiceStation");
 	this->SetName(service_name);
+
+	// Set the service description based on what we find in the config file:
+	//
+	std::string description = ini.GetValue("service", "description", "ServiceStation Managed Service");
+	this->SetDescription(description);
+
+	// Get the GUI flag indicating desktop interaction:
+	//
+	this->has_gui = ini.GetValue("service", "gui", "no");
+	if (this->has_gui == "yes") 
+	{
+		this->InteractiveState(true);
+		this->LogEvent("This service has the GUI flag set (Desktop Interaction).", S_INFO);		
+	}
+	else
+	{
+		this->has_gui = "no";
+		this->InteractiveState(false);
+		this->LogEvent("The service has no desktop interaction flag set.", S_INFO);
+	}
 
 	// Set up the command which is to be run as a service:
 	//
@@ -380,6 +400,112 @@ int Service::Run( void )
 	return NO_ERROR; 
 }
 
+// Set description
+bool Service::SetDescription(std::string description)
+{
+    bool rc = false;
+	SERVICE_DESCRIPTION sd;
+
+
+    // Open the Service Control Manager
+    SC_HANDLE service_manager = ::OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    if (service_manager) 
+    {
+        // Try to open the service
+        SC_HANDLE service = ::OpenService(
+			service_manager, 
+			this->service_name, 
+			SERVICE_CHANGE_CONFIG
+		);
+        if (service) 
+        {
+			// Changing service config, ref:
+			//    http://msdn.microsoft.com/en-us/library/ms682006(VS.85).aspx
+			//
+			char szDesc[SERVICE_DESC_MAX_LENGTH];
+			ZeroMemory(szDesc, sizeof(szDesc));
+			strncpy(szDesc, description.c_str(), SERVICE_DESC_MAX_LENGTH);
+			sd.lpDescription = szDesc;
+
+			char pTemp[SERVICE_DESC_MAX_LENGTH + 255] = "";
+			sprintf(pTemp, "Service::SetDescription(): set to '%s'!", description.c_str());
+			this->LogEvent(pTemp, S_WARN);
+
+			// Now attempt to change the service type:
+			rc = ChangeServiceConfig2(
+				service,
+				SERVICE_CONFIG_DESCRIPTION,
+				&sd
+			);
+
+            ::CloseServiceHandle(service);
+        }
+        ::CloseServiceHandle(service_manager);
+    }
+    
+    return rc;
+}
+
+
+// Enable or disable the interaction with the desktop. To
+// enable interaction the flag is true is pass to this 
+// method. To disable then the string "off" is passed instead
+// If the operation was successfull true will be returned
+// otherwise false will indicate an error.
+//
+bool Service::InteractiveState(bool interactive_state)
+{
+    bool rc = false;
+
+	// Set up with default no interaction:
+	DWORD service_type = SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS;
+
+    // Open the Service Control Manager
+    SC_HANDLE service_manager = ::OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    if (service_manager) 
+    {
+        // Try to open the service
+        SC_HANDLE service = ::OpenService(
+			service_manager, 
+			this->service_name, 
+			SERVICE_CHANGE_CONFIG
+		);
+        if (service) 
+        {
+			if (interactive_state)
+			{
+				// set up interactive flags:
+				service_type = SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS;
+				this->LogEvent("interactiveState: ON.", S_INFO);
+			}
+			else
+			{
+				this->LogEvent("interactiveState: OFF.", S_INFO);
+			}
+
+			// Now attempt to change the service type:
+			rc = ChangeServiceConfig(
+				service,
+				service_type,
+				SERVICE_NO_CHANGE,
+				SERVICE_NO_CHANGE,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL
+			);
+
+            ::CloseServiceHandle(service);
+        }
+        ::CloseServiceHandle(service_manager);
+    }
+    
+    return rc;
+}
+
 
 // Called by windows to stop the service running.
 //
@@ -466,13 +592,16 @@ bool Service::StartProcess()
     si.cb = sizeof(si);
     ZeroMemory(this->process_info, sizeof(PROCESS_INFORMATION));
 
-	// No GUI interaction. Could this be a config file option?
-	//
-	//si.wShowWindow = SW_SHOW;
-    //si.dwFlags |= STARTF_USESHOWWINDOW;
-	// We could change this to the desktop we should interact with:
-	//si.lpDesktop = NULL; 
-	//
+	// Enable desktop interaction dependant on what the sets in the config file:
+	if (this->has_gui == "yes") 
+	{
+		// SW_SHOWNORAL ref: http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
+		si.wShowWindow = SW_SHOWNORMAL;
+		si.lpDesktop = NULL; 
+		si.dwFlags |= STARTF_USESHOWWINDOW;
+		this->LogEvent("Service::StartProcess - setting up desktop interaction.", S_INFO);
+	}
+
 	// Disable stdout for the moment
     //si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
     //si.hStdError = this->childStd_ERR_Write;

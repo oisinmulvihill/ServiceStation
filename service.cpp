@@ -458,7 +458,7 @@ bool Service::InteractiveState(bool interactive_state)
     bool rc = false;
 
 	// Set up with default no interaction:
-	DWORD service_type = SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS;
+	DWORD service_type = SERVICE_WIN32_OWN_PROCESS;
 
     // Open the Service Control Manager
     SC_HANDLE service_manager = ::OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);

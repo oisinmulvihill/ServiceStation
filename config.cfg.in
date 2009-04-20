@@ -1,3 +1,11 @@
+;
+; This is a valid service station configuration file.
+; This will install a service which runs notepad.exe
+; from the c:\ directory.
+;
+; Oisin Mulvihill
+; 2009-04-20
+;
 [service]
 ; The service and display name of this windows service (no spaces please):
 name = A1_Notepad

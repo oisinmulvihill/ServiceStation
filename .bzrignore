@@ -3,6 +3,7 @@ Release/
 servicestation.ilk
 servicestation.sln
 servicestation.exe
+*.cfg
 *.log
 *.ncb
 *.suo

@@ -1,7 +1,7 @@
 #include "service.hpp"
 #include "SimpleOpt.h"
 
-BaseService *service = NULL;
+ServiceBase *service = NULL;
 
 // This will be set up so that windows calls it
 // when you start the service. The first argument
@@ -101,22 +101,22 @@ DWORD main(int argc, char *argv[])
     
 	if(install_service)
 	{
-		std::cout << "Install '" << service->GetServiceName() << "'." << std::endl;
+		std::cout << "Install '" << service->GetName() << "'." << std::endl;
         service->Install();
-		std::cout << "Installed '" << service->GetServiceName() << "' ok." << std::endl;
+		std::cout << "Installed '" << service->GetName() << "' ok." << std::endl;
 	}
     else if(remove_service)
 	{
-		std::cout << "Uninstall '" << service->GetServiceName() << "'." << std::endl;
+		std::cout << "Uninstall '" << service->GetName() << "'." << std::endl;
         service->UnInstall();
-		std::cout << "Uninstalled '" << service->GetServiceName() << "' ok." << std::endl;
+		std::cout << "Uninstalled '" << service->GetName() << "' ok." << std::endl;
 	}
 	else
 	{
 		// Default action which windows services will fall through too.
-		std::cout << "Starting '" << service->GetServiceName() << "'." << std::endl;
+		std::cout << "Starting '" << service->GetName() << "'." << std::endl;
         service->Startup();
-		std::cout << "Started '" << service->GetServiceName() << "' ok." << std::endl;
+		std::cout << "Started '" << service->GetName() << "' ok." << std::endl;
 	}
 
     DWORD exitcode = service->GetExitCode();

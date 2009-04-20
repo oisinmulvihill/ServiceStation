@@ -5,10 +5,10 @@
 
 Service::Service(
 		std::string config_file, 
-		LPSERVICE_MAIN_FUNCTION  fpSrvMain, 
-		LPHANDLER_FUNCTION fpSrvCtrl
+		LPSERVICE_MAIN_FUNCTION  service_main, 
+		LPHANDLER_FUNCTION service_control
 	)
-    : BaseService(fpSrvMain, fpSrvCtrl)
+    : ServiceBase(service_main, service_control)
 {
 	int rc = 0;
 
@@ -49,7 +49,7 @@ Service::Service(
 	// What we have configured / defaults set up:
 	//
 	std::cout << "1. config_file '" << (const char *) this->config_file << "'." << std::endl;
-	std::cout << "2. service_name '" << this->GetServiceName() << "'." << std::endl;
+	std::cout << "2. service_name '" << this->GetName() << "'." << std::endl;
 	std::cout << "3. working_dir '" << (const char *) this->working_path << "'." << std::endl;
 	std::cout << "4. log_file '" << (const char *) this->log_file_name << "'." << std::endl;
 
@@ -140,9 +140,9 @@ void Service::LogEvent(const char *message, int level)
 			break;
 	}
 
-	HANDLE event_source = RegisterEventSource(NULL, this->GetServiceName());      
+	HANDLE event_source = RegisterEventSource(NULL, this->GetName());      
 	if(event_source == NULL) {
-		std::cerr << "Unable to register source: '" << this->GetServiceName() << "'." << std::endl;     
+		std::cerr << "Unable to register source: '" << this->GetName() << "'." << std::endl;     
 	}
 	else
 	{
@@ -201,7 +201,7 @@ int Service::SetupFromConfiguration(const char *config_filename)
 	// Set up the name of this service:
 	//
 	std::string service_name = ini.GetValue("service", "name", "ServiceRunner");
-	this->SetServiceName(service_name);
+	this->SetName(service_name);
 
 	// Set up the command which is to be run as a service:
 	//

@@ -1,7 +1,7 @@
-#include "BaseService.hpp"
+#include "ServiceBase.hpp"
 
 
-BaseService::BaseService(
+ServiceBase::ServiceBase(
     LPSERVICE_MAIN_FUNCTION service_main, 
     LPHANDLER_FUNCTION service_control
 )
@@ -28,13 +28,13 @@ BaseService::BaseService(
                                             | SERVICE_ACCEPT_SHUTDOWN; 
 }
 
-BaseService::~BaseService( void )
+ServiceBase::~ServiceBase( void )
 {
 }
 
 
 // Change the current service name:
-void BaseService::SetServiceName(std::string new_name) 
+void ServiceBase::SetName(std::string new_name) 
 {
     memset(this->service_name, 0, sizeof(this->service_name));
     strncpy(this->service_name, new_name.c_str(), SERVICE_NAME_MAX_LEN-1);
@@ -42,7 +42,7 @@ void BaseService::SetServiceName(std::string new_name)
 
 
 // Recover the current service name:
-const char * BaseService::GetServiceName(void) 
+const char * ServiceBase::GetName(void) 
 {
 	return (const char *) this->service_name;
 }
@@ -50,7 +50,7 @@ const char * BaseService::GetServiceName(void)
 
 // Called to start up the service and run.
 //
-DWORD BaseService::Startup(void)
+DWORD ServiceBase::Startup(void)
 {
 	this->dispatch_table[0].lpServiceName = this->service_name;
     this->dispatch_table[0].lpServiceProc = this->service_main;
@@ -67,10 +67,10 @@ DWORD BaseService::Startup(void)
 // The service main which windows calls when starting the service. The
 // first argument should be the name the service was started with.
 //
-int BaseService::Service(DWORD argc, LPTSTR* argv)
+int ServiceBase::Service(DWORD argc, LPTSTR* argv)
 {
 	std::string service_name = (char *)argv[0];
-	this->SetServiceName(service_name);
+	this->SetName(service_name);
 
 	// Perform any special actions such as configuration 
 	// recovery and service set up before we start running 
@@ -82,7 +82,7 @@ int BaseService::Service(DWORD argc, LPTSTR* argv)
         return this->error_code;
     }
     
-	this->service_stat = RegisterServiceCtrlHandler(_T(this->GetServiceName()), this->service_control);
+	this->service_stat = RegisterServiceCtrlHandler(_T(this->GetName()), this->service_control);
     if((SERVICE_STATUS_HANDLE)0 == this->service_stat)
 	{
         this->error_code = ::GetLastError();
@@ -96,7 +96,7 @@ int BaseService::Service(DWORD argc, LPTSTR* argv)
 // Handle various windows control signals. These will call the various
 // methods match the signal i.e. SERVICE_CONTROL_STOP calls OnStop().
 //
-void BaseService::Control(DWORD opcode)
+void ServiceBase::Control(DWORD opcode)
 {
     switch(opcode)
     {
@@ -144,7 +144,7 @@ void BaseService::Control(DWORD opcode)
 }
 
 
-bool BaseService::Install(void)
+bool ServiceBase::Install(void)
 {
 	// Don't reinstall if we've been already been:
     if(IsInstalled())
@@ -200,7 +200,7 @@ bool BaseService::Install(void)
 }
 
 // Remove the service if it is actually present.
-bool BaseService::UnInstall(void)
+bool ServiceBase::UnInstall(void)
 {
 	// Only do this if it is actually installed!
     if(!IsInstalled())
@@ -238,7 +238,7 @@ bool BaseService::UnInstall(void)
     return rc;
 }
 
-DWORD BaseService::GetLastError( void )
+DWORD ServiceBase::GetLastError( void )
 {
     return this->error_code;
 }
@@ -247,7 +247,7 @@ DWORD BaseService::GetLastError( void )
 // has been already. This is used to prevent over writting
 // and force removeal before reinstalling it.
 //
-bool BaseService::IsInstalled( void )
+bool ServiceBase::IsInstalled( void )
 {
     bool rc = false;
 
@@ -273,12 +273,12 @@ bool BaseService::IsInstalled( void )
     return rc;
 }
 
-void BaseService::SetAcceptedControls(DWORD controls)
+void ServiceBase::SetAcceptedControls(DWORD controls)
 {
     this->service_status.dwControlsAccepted = controls;
 }
 
-void BaseService::ChangeStatus(DWORD state, DWORD checkpoint, DWORD waithint)
+void ServiceBase::ChangeStatus(DWORD state, DWORD checkpoint, DWORD waithint)
 {
     this->service_status.dwCurrentState = state;
     this->service_status.dwCheckPoint = checkpoint;
@@ -287,43 +287,43 @@ void BaseService::ChangeStatus(DWORD state, DWORD checkpoint, DWORD waithint)
     SetServiceStatus(this->service_stat, &this->service_status);
 }
 
-DWORD BaseService::Init(DWORD argc, LPTSTR* argv) 
+DWORD ServiceBase::Init(DWORD argc, LPTSTR* argv) 
 { 
 	return NO_ERROR; 
 }
 
-void  BaseService::InstallAid(char * exe_path) 
+void  ServiceBase::InstallAid(char * exe_path) 
 {
 }
 
-void  BaseService::UnInstallAid(void) 
+void  ServiceBase::UnInstallAid(void) 
 {
 }
 
-DWORD BaseService::OnPause(void) 
+DWORD ServiceBase::OnPause(void) 
 { 
 	return NO_ERROR; 
 }
 
-DWORD BaseService::OnContinue(void) 
+DWORD ServiceBase::OnContinue(void) 
 { 
 	return NO_ERROR; 
 }
 
-void BaseService::OnStop(void) 
+void ServiceBase::OnStop(void) 
 {
 }
 
-void BaseService::OnShutdown(void) 
+void ServiceBase::OnShutdown(void) 
 {
 	OnStop(); 
 }
 
-void  BaseService::OnInquire(void) 
+void  ServiceBase::OnInquire(void) 
 {
 }
 
-void  BaseService::OnUserControl(DWORD) 
+void  ServiceBase::OnUserControl(DWORD) 
 {
 }
 

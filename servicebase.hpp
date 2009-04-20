@@ -1,14 +1,14 @@
 /*
 Taken from example service wrapper class http://www.ddj.com/cpp/184403531
 */
-#ifndef _BaseService_h_
-#define _BaseService_h_
+#ifndef _ServiceBase_h_
+#define _ServiceBase_h_
 
 #include "stdafx.h"
 
 #define SERVICE_NAME_MAX_LEN 256
 
-class BaseService
+class ServiceBase
 {
 private:
     bool is_started;
@@ -26,8 +26,8 @@ protected:
     SERVICE_STATUS_HANDLE service_stat;
 
 private:
-    BaseService();               
-    BaseService(BaseService&);   
+    ServiceBase();               
+    ServiceBase(ServiceBase&);   
 
 protected:
 
@@ -54,14 +54,14 @@ protected:
     virtual void OnUserControl(DWORD usercmd);
 
 public:
-    BaseService(
+    ServiceBase(
 		LPSERVICE_MAIN_FUNCTION service_main, 
 		LPHANDLER_FUNCTION service_control
 	);
-    virtual ~BaseService(void);
+    virtual ~ServiceBase(void);
 	
-	void BaseService::SetServiceName(std::string new_name);
-	const char * BaseService::GetServiceName(void);
+	void SetName(std::string new_name);
+	const char * GetName(void);
 
     virtual DWORD Startup(void);
     virtual int Service(DWORD argc, LPTSTR* argv);    
@@ -75,7 +75,7 @@ public:
     virtual DWORD GetExitCode(void);    
 };
 
-inline DWORD BaseService::GetExitCode(void)
+inline DWORD ServiceBase::GetExitCode(void)
 {
     return this->service_status.dwWin32ExitCode;
 }

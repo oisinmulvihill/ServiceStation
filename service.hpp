@@ -1,7 +1,7 @@
 #ifndef _the_service_h_
 #define _the_service_h_
 
-#include "BaseService.hpp"
+#include "servicebase.hpp"
 
 #define NAME_PATH_MAX_LENGTH 2048
 #define REG_PATH_MAX_LENGTH 2048
@@ -15,7 +15,7 @@
 #define S_WARN 2
 #define S_ERROR 3
 
-class Service : public BaseService
+class Service : public ServiceBase
 {
     HANDLE childStd_ERR_Read;
 	HANDLE childStd_ERR_Write;
@@ -89,8 +89,8 @@ protected:
 public:
 	Service(
 		std::string config_file, 
-		LPSERVICE_MAIN_FUNCTION  fpSrvMain, 
-		LPHANDLER_FUNCTION fpSrvCtrl
+		LPSERVICE_MAIN_FUNCTION  service_main, 
+		LPHANDLER_FUNCTION service_control
 	);
 
 	~Service(void);

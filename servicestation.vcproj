@@ -203,15 +203,15 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
-				RelativePath=".\BaseService.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\service.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\servicebase.cpp"
 				>
 			</File>
 		</Filter>
@@ -220,11 +220,11 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath=".\BaseService.hpp"
+				RelativePath=".\service.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\service.hpp"
+				RelativePath=".\servicebase.hpp"
 				>
 			</File>
 			<File

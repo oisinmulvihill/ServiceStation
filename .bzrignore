@@ -10,3 +10,5 @@ servicestation.exe
 *.idb
 *.pdb
 *.BANTER.oisin.user
+servicestation.vcproj*
+

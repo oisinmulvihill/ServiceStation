@@ -1,6 +1,30 @@
 #include "ServiceBase.hpp"
 
 
+void copy_text(char *dest, const char *src, int dest_max, int src_length)
+{
+	int length = 0;
+
+	// Clear the destination ready for new content:
+    ZeroMemory((void *) dest, dest_max);
+
+	if (src_length < dest_max)
+	{
+		// Copy only the length of the string as there is more then enough
+		// space for it.
+		length = src_length;
+	}
+	else
+	{
+		// Copy only what we can fit taking into account the space needed for 
+		// of the null terminator.
+		length = dest_max - 1;
+	}
+
+	strncpy(dest, src, length);
+}
+
+
 ServiceBase::ServiceBase(
     LPSERVICE_MAIN_FUNCTION service_main, 
     LPHANDLER_FUNCTION service_control
@@ -32,12 +56,20 @@ ServiceBase::~ServiceBase( void )
 {
 }
 
+int ServiceBase::SetupFromConfiguration()
+{
+	return 1;
+}
+
+int ServiceBase::SetupFromConfiguration(const char *config_filename)
+{
+	return 1;
+}
 
 // Change the current service name:
 void ServiceBase::SetName(std::string new_name) 
 {
-    memset(this->service_name, 0, sizeof(this->service_name));
-    strncpy(this->service_name, new_name.c_str(), SERVICE_NAME_MAX_LEN-1);
+	copy_text(this->service_name, new_name.c_str(), SERVICE_NAME_MAX_LEN, new_name.length());
 }
 
 

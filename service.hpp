@@ -84,6 +84,7 @@ protected:
 	void EndProcess(void);
 
 	// Load the service insance configuration.
+	int SetupFromConfiguration(void);
 	int SetupFromConfiguration(const char *config_filename);
 
 	// Log a message to the window event log.

@@ -12,6 +12,13 @@ Service::Service(
 {
 	int rc = 0;
 
+	// Zero storeage:
+	ZeroMemory(registry_path, sizeof(registry_path));
+	ZeroMemory(process_name, sizeof(process_name));
+	ZeroMemory(log_file_name, sizeof(log_file_name));
+	ZeroMemory(working_path, sizeof(working_path));
+
+
 	// Redirecting stdout/stderror based on the MSDN
 	// article here:
 	//
@@ -30,29 +37,7 @@ Service::Service(
 	// Set up the config file and path and then read in the 
 	// configuration for the rest of the service setup:
 	//
-	memset(&(this->config_file[0]), 0, NAME_PATH_MAX_LENGTH);
-	strncpy(&(this->config_file[0]), config_file.c_str(), NAME_PATH_MAX_LENGTH);
-
-	rc = this->SetupFromConfiguration(this->config_file);
-	if (rc != NO_ERROR) 
-	{
-		// This means we are probably running in service mode. The Init() 
-		// call will attempt to use the registry to recover and setup the 
-		// service. If this fails the service will be stopped correctly,
-		// which we can't do at this stage.
-		//
-		std::cout << "Possible error loading '" << config_file << "'. Init() will handle this." << std::endl;
-		std::cout << "Using default values for the moment." << std::endl;
-		//return;
-	}
-
-	// What we have configured / defaults set up:
-	//
-	std::cout << "1. config_file '" << (const char *) this->config_file << "'." << std::endl;
-	std::cout << "2. service_name '" << this->GetName() << "'." << std::endl;
-	std::cout << "3. working_dir '" << (const char *) this->working_path << "'." << std::endl;
-	std::cout << "4. log_file '" << (const char *) this->log_file_name << "'." << std::endl;
-
+	copy_text(this->config_file, config_file.c_str(), NAME_PATH_MAX_LENGTH, config_file.length());
 
 	// Used by StartProcess...
 	//
@@ -171,6 +156,11 @@ void Service::LogEvent(const char *message, int level)
 // or via the registry. The construct or Init() will call this
 // method. The file will return NO_ERROR if everything is ok.
 //
+int Service::SetupFromConfiguration(void)
+{
+	return this->SetupFromConfiguration(this->config_file);
+}
+
 int Service::SetupFromConfiguration(const char *config_filename)
 {
 	bool IsUtf8 = TRUE;
@@ -231,20 +221,18 @@ int Service::SetupFromConfiguration(const char *config_filename)
 		this->LogEvent("Error command_line was an empty string!", S_ERROR);
 		return 1;
 	}
-	memset(&(this->process_name[0]), 0, NAME_PATH_MAX_LENGTH);
-	strncpy(&(this->process_name[0]), command_line.c_str(), NAME_PATH_MAX_LENGTH);
-	
+	copy_text(this->process_name, command_line.c_str(), NAME_PATH_MAX_LENGTH, command_line.length());
+
+
 	// Set up where the process is run from:
 	//
 	std::string working_dir = ini.GetValue("service", "working_dir", "c:\\");
-	memset(&(this->working_path[0]), 0, NAME_PATH_MAX_LENGTH);
-	strncpy(&(this->working_path[0]), working_dir.c_str(), NAME_PATH_MAX_LENGTH);
+	copy_text(this->working_path, working_dir.c_str(), NAME_PATH_MAX_LENGTH, working_dir.length());
 
 	// The file to write the child processes STDOUT/ERR to:
 	//
 	std::string the_log_file = ini.GetValue("service", "log_file", "child_out_err.log");
-	memset(&(this->log_file_name[0]), 0, MAX_PATH);
-	strncpy(&(this->log_file_name[0]), the_log_file.c_str(), MAX_PATH);
+	copy_text(this->log_file_name, the_log_file.c_str(), MAX_PATH, the_log_file.length());
 
 	//this->log_file = CreateFile(
 	//   (LPCTSTR) (log_file_name), 
@@ -423,8 +411,8 @@ bool Service::SetDescription(std::string description)
 			//    http://msdn.microsoft.com/en-us/library/ms682006(VS.85).aspx
 			//
 			char szDesc[SERVICE_DESC_MAX_LENGTH];
-			ZeroMemory(szDesc, sizeof(szDesc));
-			strncpy(szDesc, description.c_str(), SERVICE_DESC_MAX_LENGTH);
+		
+			copy_text(szDesc, description.c_str(), SERVICE_DESC_MAX_LENGTH, description.length());
 			sd.lpDescription = szDesc;
 
 			char pTemp[SERVICE_DESC_MAX_LENGTH + 255] = "";

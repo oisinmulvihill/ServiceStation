@@ -1,7 +1,7 @@
 #include "service.hpp"
 #include "SimpleOpt.h"
 
-#define SERVICESTATION_VERSION "1.0.0"
+#define SERVICESTATION_VERSION "1.0.4"
 
 ServiceBase *service = NULL;
 
@@ -40,6 +40,9 @@ Usage: \n \
 
 DWORD main(int argc, char *argv[])
 {
+	int rc = 0;
+	DWORD exitcode = 0;
+
 	// Command line argument setup
 	enum { OPT_HELP, OPT_CFG, OPT_ADD, OPT_DEL, OPT_VER };
 	CSimpleOpt::SOption g_rgOptions[] = {
@@ -103,7 +106,7 @@ DWORD main(int argc, char *argv[])
 		std::cout << std::endl \
 			      << "ServiceStation: v" << SERVICESTATION_VERSION << std::endl \
 			      << "Oisin Mulvihill / Folding Software Limited / 2009 " << std::endl \
-				  << "Please see: http://www.foldingsoftware.com/servicestation " \
+				  << "Please see: http://www.foldingsoftware.com/servicestation " << std::endl \
 				  << std::endl;
 		return 0;
 	}
@@ -120,15 +123,53 @@ DWORD main(int argc, char *argv[])
     
 	if(install_service)
 	{
-		std::cout << "Install '" << service->GetName() << "'." << std::endl;
-        service->Install();
-		std::cout << "Installed '" << service->GetName() << "' ok." << std::endl;
+		rc = service->SetupFromConfiguration();
+		if (rc != NO_ERROR) 
+		{
+			// This means we are probably running in service mode. The Init() 
+			// call will attempt to use the registry to recover and setup the 
+			// service. If this fails the service will be stopped correctly,
+			// which we can't do at this stage.
+			//
+			std::cout << "Error loading '" << (const char *) config_file.c_str() << "'!" << std::endl;
+			exitcode = 1;
+		}
+		else
+		{
+			// What we have configured / defaults set up:
+			//
+			std::cout << "config_file '" << (const char *) config_file.c_str() << "'." << std::endl;
+			std::cout << "service_name '" << service->GetName() << "'." << std::endl;
+
+			std::cout << "Installing... " << std::endl;
+			service->Install();
+			std::cout << "Installed ok." << std::endl;
+		}
 	}
     else if(remove_service)
 	{
-		std::cout << "Uninstall '" << service->GetName() << "'." << std::endl;
-        service->UnInstall();
-		std::cout << "Uninstalled '" << service->GetName() << "' ok." << std::endl;
+		rc = service->SetupFromConfiguration();
+		if (rc != NO_ERROR) 
+		{
+			// This means we are probably running in service mode. The Init() 
+			// call will attempt to use the registry to recover and setup the 
+			// service. If this fails the service will be stopped correctly,
+			// which we can't do at this stage.
+			//
+			std::cout << "Error loading '" << (const char *) config_file.c_str() << "'!" << std::endl;
+			exitcode = 1;
+		}
+		else
+		{
+			// What we have configured / defaults set up:
+			//
+			std::cout << "config_file '" << (const char *) config_file.c_str() << "'." << std::endl;
+			std::cout << "service_name '" << service->GetName() << "'." << std::endl;
+
+			std::cout << "Uninstalling... " << std::endl;
+	        service->UnInstall();
+			std::cout << "Uninstalled ok." << std::endl;
+		}
 	}
 	else
 	{
@@ -136,9 +177,9 @@ DWORD main(int argc, char *argv[])
 		std::cout << "Starting '" << service->GetName() << "'." << std::endl;
         service->Startup();
 		std::cout << "Started '" << service->GetName() << "' ok." << std::endl;
+	    exitcode = service->GetExitCode();
 	}
 
-    DWORD exitcode = service->GetExitCode();
     delete service;
 
 	std::cout << "Exit code: '" << exitcode << "'." << std::endl;

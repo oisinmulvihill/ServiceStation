@@ -8,6 +8,10 @@ Taken from example service wrapper class http://www.ddj.com/cpp/184403531
 
 #define SERVICE_NAME_MAX_LEN 256
 
+// Safe copy up to the max amount we have available or just the length of the
+// string id it is less.
+void copy_text(char *dest, const char *src, int dest_max, int src_length);
+
 class ServiceBase
 {
 private:
@@ -59,7 +63,10 @@ public:
 		LPHANDLER_FUNCTION service_control
 	);
     virtual ~ServiceBase(void);
-	
+
+	int SetupFromConfiguration();
+	int SetupFromConfiguration(const char *config_filename);
+
 	void SetName(std::string new_name);
 	const char * GetName(void);
 

@@ -1,5 +1,13 @@
 /*
-Taken from example service wrapper class http://www.ddj.com/cpp/184403531
+This is based on the excellent service example from here:
+
+    http://www.ddj.com/cpp/184403531
+
+See License.txt to see what this project is licensed under.
+
+Oisin Mulvihill
+2009-04-20
+
 */
 #ifndef _ServiceBase_h_
 #define _ServiceBase_h_
@@ -35,27 +43,27 @@ private:
 
 protected:
 
-    virtual void SetAcceptedControls(DWORD controls);
-    virtual void ChangeStatus(
+    virtual void setAcceptedControls(DWORD controls);
+    virtual void changeStatus(
 		DWORD state, 
         DWORD checkpoint = (DWORD)0, 
         DWORD waithint = (DWORD)0
 	);
     
-    virtual DWORD Init(DWORD argc, LPTSTR* argv);
-    virtual int Run(void) = 0;
+    virtual DWORD init(DWORD argc, LPTSTR* argv);
+    virtual int run(void) = 0;
     
-    virtual void InstallAid(char *exe_path);
-    virtual void UnInstallAid(void);
+    virtual void installAid(char *exe_path);
+    virtual void uninstallAid(void);
 
-    virtual DWORD OnPause(void );
-    virtual DWORD OnContinue(void );
+    virtual DWORD onPause(void );
+    virtual DWORD onContinue(void );
 
-    virtual void OnStop(void);
-    virtual void OnShutdown(void);
+    virtual void onStop(void);
+    virtual void onShutdown(void);
 
-    virtual void OnInquire(void);
-    virtual void OnUserControl(DWORD usercmd);
+    virtual void onInquire(void);
+    virtual void onUserControl(DWORD usercmd);
 
 public:
     ServiceBase(
@@ -64,25 +72,25 @@ public:
 	);
     virtual ~ServiceBase(void);
 
-	int SetupFromConfiguration();
-	int SetupFromConfiguration(const char *config_filename);
+	int setupFromConfiguration();
+	int setupFromConfiguration(const char *config_filename);
 
 	void SetName(std::string new_name);
 	const char * GetName(void);
 
     virtual DWORD Startup(void);
     virtual int Service(DWORD argc, LPTSTR* argv);    
-    virtual void Control(DWORD opcode);
+    virtual void control(DWORD opcode);
 
     virtual bool IsInstalled(void);
     virtual bool Install(void);
     virtual bool UnInstall(void);
 
-    virtual DWORD GetLastError(void);    
-    virtual DWORD GetExitCode(void);    
+    virtual DWORD getLastError(void);    
+    virtual DWORD getExitCode(void);    
 };
 
-inline DWORD ServiceBase::GetExitCode(void)
+inline DWORD ServiceBase::getExitCode(void)
 {
     return this->service_status.dwWin32ExitCode;
 }

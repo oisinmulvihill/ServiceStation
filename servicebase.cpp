@@ -1,6 +1,14 @@
+/*
+
+See License.txt to see what this project is licensed under.
+
+Oisin Mulvihill
+2009-04-20
+
+*/
 #include "ServiceBase.hpp"
 
-
+// Copy text safely into a limited amount of space:
 void copy_text(char *dest, const char *src, int dest_max, int src_length)
 {
 	int length = 0;
@@ -31,7 +39,7 @@ ServiceBase::ServiceBase(
 )
 {
 	// Store the control function and service main which in a 
-	// round-about fashion will refer to Control() and Service()
+	// round-about fashion will refer to control() and Service()
 	//
     this->service_control = service_control;
     this->service_main = service_main;
@@ -56,12 +64,12 @@ ServiceBase::~ServiceBase( void )
 {
 }
 
-int ServiceBase::SetupFromConfiguration()
+int ServiceBase::setupFromConfiguration()
 {
 	return 1;
 }
 
-int ServiceBase::SetupFromConfiguration(const char *config_filename)
+int ServiceBase::setupFromConfiguration(const char *config_filename)
 {
 	return 1;
 }
@@ -89,7 +97,7 @@ DWORD ServiceBase::Startup(void)
 
     if(!StartServiceCtrlDispatcher(this->dispatch_table))
 	{
-        this->error_code = ::GetLastError();
+		this->error_code = GetLastError();
         return this->error_code;
     }
 
@@ -108,67 +116,67 @@ int ServiceBase::Service(DWORD argc, LPTSTR* argv)
 	// recovery and service set up before we start running 
 	// the service.
 	//
-    if(Init(argc, argv) != NO_ERROR)
+    if(init(argc, argv) != NO_ERROR)
     {
-        ChangeStatus(SERVICE_STOPPED);
+        changeStatus(SERVICE_STOPPED);
         return this->error_code;
     }
     
 	this->service_stat = RegisterServiceCtrlHandler(_T(this->GetName()), this->service_control);
     if((SERVICE_STATUS_HANDLE)0 == this->service_stat)
 	{
-        this->error_code = ::GetLastError();
+        this->error_code = GetLastError();
         return this->error_code;
     }
     
-    ChangeStatus(SERVICE_RUNNING);
-    return Run();
+    changeStatus(SERVICE_RUNNING);
+    return run();
 }
 
 // Handle various windows control signals. These will call the various
-// methods match the signal i.e. SERVICE_CONTROL_STOP calls OnStop().
+// methods match the signal i.e. SERVICE_CONTROL_STOP calls onStop().
 //
-void ServiceBase::Control(DWORD opcode)
+void ServiceBase::control(DWORD opcode)
 {
     switch(opcode)
     {
     case SERVICE_CONTROL_PAUSE:
-        ChangeStatus(SERVICE_PAUSE_PENDING);
-        if(OnPause() == NO_ERROR)
+        changeStatus(SERVICE_PAUSE_PENDING);
+        if(onPause() == NO_ERROR)
         {
             this->is_paused = true;
-            ChangeStatus(SERVICE_PAUSED);
+            changeStatus(SERVICE_PAUSED);
         }
         break;
 
     case SERVICE_CONTROL_CONTINUE:
-        ChangeStatus(SERVICE_CONTINUE_PENDING);
-        if(OnContinue() == NO_ERROR)
+        changeStatus(SERVICE_CONTINUE_PENDING);
+        if(onContinue() == NO_ERROR)
         {
             this->is_paused = false;
-            ChangeStatus(SERVICE_RUNNING);
+            changeStatus(SERVICE_RUNNING);
         }
         break;
 
     case SERVICE_CONTROL_STOP:
-        ChangeStatus(SERVICE_STOP_PENDING);
-        OnStop();
-        ChangeStatus(SERVICE_STOPPED);
+        changeStatus(SERVICE_STOP_PENDING);
+        onStop();
+        changeStatus(SERVICE_STOPPED);
         break;
 
     case SERVICE_CONTROL_SHUTDOWN:
-        ChangeStatus(SERVICE_STOP_PENDING);
-        OnShutdown();
-        ChangeStatus(SERVICE_STOPPED);
+        changeStatus(SERVICE_STOP_PENDING);
+        onShutdown();
+        changeStatus(SERVICE_STOPPED);
         break;
 
     case SERVICE_CONTROL_INTERROGATE:
-        OnInquire();
+        onInquire();
         SetServiceStatus(this->service_stat, &this->service_status);
         break;
 
     default:
-        OnUserControl(opcode);
+        onUserControl(opcode);
         SetServiceStatus(this->service_stat, &this->service_status);
         break;
     };
@@ -187,7 +195,7 @@ bool ServiceBase::Install(void)
     SC_HANDLE service_manager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     if(service_manager == NULL)
     {
-        this->error_code = ::GetLastError();
+        this->error_code = GetLastError();
         return false;
     }
 
@@ -220,14 +228,14 @@ bool ServiceBase::Install(void)
     bool rc = true;
     if(service == NULL)
     {
-        this->error_code = ::GetLastError();
+        this->error_code = GetLastError();
         rc = false;
     }
     else
 	{
 		// Pass this on so that it can be used in registry set up 
 		// if the end user wants to do this.
-        InstallAid(file_path);
+        installAid(file_path);
 	}
     
     CloseServiceHandle(service);
@@ -247,14 +255,14 @@ bool ServiceBase::UnInstall(void)
     SC_HANDLE service_manager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     if(service_manager == NULL)
     {
-        this->error_code = ::GetLastError();
+        this->error_code = GetLastError();
         return false;
     }
 
     SC_HANDLE service = OpenService(service_manager, this->service_name, DELETE);
     if(service == NULL)
     {
-        this->error_code = ::GetLastError();
+        this->error_code = GetLastError();
         CloseServiceHandle(service_manager);
         return false;
     }
@@ -263,18 +271,18 @@ bool ServiceBase::UnInstall(void)
     if(!DeleteService(service))
     {
         rc = false;
-        this->error_code = ::GetLastError();
+        this->error_code = GetLastError();
     }
 
     // Uninstall any registry setup:
-    UnInstallAid();
+    uninstallAid();
 
     CloseServiceHandle(service);
     CloseServiceHandle(service_manager);
     return rc;
 }
 
-DWORD ServiceBase::GetLastError( void )
+DWORD ServiceBase::getLastError( void )
 {
     return this->error_code;
 }
@@ -309,12 +317,12 @@ bool ServiceBase::IsInstalled( void )
     return rc;
 }
 
-void ServiceBase::SetAcceptedControls(DWORD controls)
+void ServiceBase::setAcceptedControls(DWORD controls)
 {
     this->service_status.dwControlsAccepted = controls;
 }
 
-void ServiceBase::ChangeStatus(DWORD state, DWORD checkpoint, DWORD waithint)
+void ServiceBase::changeStatus(DWORD state, DWORD checkpoint, DWORD waithint)
 {
     this->service_status.dwCurrentState = state;
     this->service_status.dwCheckPoint = checkpoint;
@@ -323,43 +331,43 @@ void ServiceBase::ChangeStatus(DWORD state, DWORD checkpoint, DWORD waithint)
     SetServiceStatus(this->service_stat, &this->service_status);
 }
 
-DWORD ServiceBase::Init(DWORD argc, LPTSTR* argv) 
+DWORD ServiceBase::init(DWORD argc, LPTSTR* argv) 
 { 
 	return NO_ERROR; 
 }
 
-void  ServiceBase::InstallAid(char * exe_path) 
+void  ServiceBase::installAid(char * exe_path) 
 {
 }
 
-void  ServiceBase::UnInstallAid(void) 
+void  ServiceBase::uninstallAid(void) 
 {
 }
 
-DWORD ServiceBase::OnPause(void) 
+DWORD ServiceBase::onPause(void) 
 { 
 	return NO_ERROR; 
 }
 
-DWORD ServiceBase::OnContinue(void) 
+DWORD ServiceBase::onContinue(void) 
 { 
 	return NO_ERROR; 
 }
 
-void ServiceBase::OnStop(void) 
+void ServiceBase::onStop(void) 
 {
 }
 
-void ServiceBase::OnShutdown(void) 
+void ServiceBase::onShutdown(void) 
 {
-	OnStop(); 
+	onStop(); 
 }
 
-void  ServiceBase::OnInquire(void) 
+void  ServiceBase::onInquire(void) 
 {
 }
 
-void  ServiceBase::OnUserControl(DWORD) 
+void  ServiceBase::onUserControl(DWORD) 
 {
 }
 

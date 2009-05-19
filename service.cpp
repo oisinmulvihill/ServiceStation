@@ -1,3 +1,11 @@
+/*
+
+See License.txt to see what this project is licensed under.
+
+Oisin Mulvihill
+2009-04-20
+
+*/
 #include "SimpleIni.h"
 
 #include "service.hpp"
@@ -39,7 +47,7 @@ Service::Service(
 	//
 	copy_text(this->config_file, config_file.c_str(), NAME_PATH_MAX_LENGTH, config_file.length());
 
-	// Used by StartProcess...
+	// Used by startProcess...
 	//
 	this->process_info = NULL;
 }
@@ -77,7 +85,7 @@ Service::~Service( void )
 // If the configuration hasn't been setup yet for a various reasons,
 // then messages will appear under the default source 'ServiceRunner'.
 //
-void Service::LogEvent(const char *message, int level) 
+void Service::logEvent(const char *message, int level) 
 {
 	int rc = 0;
 
@@ -153,15 +161,15 @@ void Service::LogEvent(const char *message, int level)
 
 
 // Load the configuration file recovered from the command line
-// or via the registry. The construct or Init() will call this
+// or via the registry. The construct or init() will call this
 // method. The file will return NO_ERROR if everything is ok.
 //
-int Service::SetupFromConfiguration(void)
+int Service::setupFromConfiguration(void)
 {
-	return this->SetupFromConfiguration(this->config_file);
+	return this->setupFromConfiguration(this->config_file);
 }
 
-int Service::SetupFromConfiguration(const char *config_filename)
+int Service::setupFromConfiguration(const char *config_filename)
 {
 	bool IsUtf8 = TRUE;
 	bool UseMultiKey = FALSE;
@@ -174,7 +182,7 @@ int Service::SetupFromConfiguration(const char *config_filename)
 	{
 		char pTemp[MAX_PATH + 255] = "";
 		sprintf(pTemp, "Unable to load configuration from: '%s'.", config_filename);
-		this->LogEvent(pTemp, S_ERROR);
+		this->logEvent(pTemp, S_ERROR);
 		return 1;
 	}
 
@@ -184,7 +192,7 @@ int Service::SetupFromConfiguration(const char *config_filename)
 	this->job_processes = CreateJobObject(NULL, "servicestation-jobs");
 	if (!(this->job_processes))
 	{
-		this->LogEvent("Error creating service station job container!", S_ERROR);
+		this->logEvent("Error creating service station job container!", S_ERROR);
 		return 1;
 	}
 
@@ -196,21 +204,21 @@ int Service::SetupFromConfiguration(const char *config_filename)
 	// Set the service description based on what we find in the config file:
 	//
 	std::string description = ini.GetValue("service", "description", "ServiceStation Managed Service");
-	this->SetDescription(description);
+	this->setDescription(description);
 
 	// Get the GUI flag indicating desktop interaction:
 	//
 	this->has_gui = ini.GetValue("service", "gui", "no");
 	if (this->has_gui == "yes") 
 	{
-		this->InteractiveState(true);
-		this->LogEvent("This service has the GUI flag set (Desktop Interaction).", S_INFO);		
+		this->interactiveState(true);
+		this->logEvent("This service has the GUI flag set (Desktop Interaction).", S_INFO);		
 	}
 	else
 	{
 		this->has_gui = "no";
-		this->InteractiveState(false);
-		this->LogEvent("The service has no desktop interaction flag set.", S_INFO);
+		this->interactiveState(false);
+		this->logEvent("The service has no desktop interaction flag set.", S_INFO);
 	}
 
 	// Set up the command which is to be run as a service:
@@ -218,7 +226,7 @@ int Service::SetupFromConfiguration(const char *config_filename)
 	std::string command_line = ini.GetValue("service", "command_line", "cmd.exe");
 	if (command_line.length() < 1)
 	{
-		this->LogEvent("Error command_line was an empty string!", S_ERROR);
+		this->logEvent("Error command_line was an empty string!", S_ERROR);
 		return 1;
 	}
 	copy_text(this->process_name, command_line.c_str(), NAME_PATH_MAX_LENGTH, command_line.length());
@@ -249,7 +257,7 @@ int Service::SetupFromConfiguration(const char *config_filename)
 	//  this->log_file = NULL;
 	//  char pTemp[MAX_PATH + 255] = "";
 	//  sprintf(pTemp, "Unable to access/read: '%s'.", this->log_file_name);
- //     this->LogEvent(pTemp, S_ERROR);
+ //     this->logEvent(pTemp, S_ERROR);
 	//  //
 	//  //return 1;
 	//}	
@@ -264,7 +272,7 @@ int Service::SetupFromConfiguration(const char *config_filename)
 // Putting the exe in a new directory with the same/different
 // config will allow you to run another service instance.
 //
-DWORD Service::Init(DWORD ac, LPTSTR *av)
+DWORD Service::init(DWORD ac, LPTSTR *av)
 {
 	DWORD rc = 0;
 
@@ -286,8 +294,8 @@ DWORD Service::Init(DWORD ac, LPTSTR *av)
 	if (_MAX_PATH >= max_exe_length) 
 	{
 		char pTemp[255] = "";
-		sprintf(pTemp, "Service::Init(): Cannot recover the registry as the exe path and name are too large!");
-		this->LogEvent(pTemp, S_ERROR);
+		sprintf(pTemp, "Service::init(): Cannot recover the registry as the exe path and name are too large!");
+		this->logEvent(pTemp, S_ERROR);
 		return 1;
 	}
 	strcpy(registry_path, reg_start);	
@@ -324,30 +332,30 @@ DWORD Service::Init(DWORD ac, LPTSTR *av)
 
 		if (rc != ERROR_SUCCESS)
 	    {
-			this->LogEvent("Service::Init(): Could get the config file value from registry!", S_INFO);		
+			this->logEvent("Service::init(): Could get the config file value from registry!", S_INFO);		
 			return 1;
 		}
 		else
 		{
-			rc = this->SetupFromConfiguration(data);
+			rc = this->setupFromConfiguration(data);
 		}
         RegCloseKey(service_key);
 	}
 	else
 	{
 		char pTemp[REG_PATH_MAX_LENGTH + 255] = "";
-		sprintf(pTemp, "Service::Init(): Unable to open registry key '%s'!", registry_path);
-		this->LogEvent(pTemp, S_ERROR);
+		sprintf(pTemp, "Service::init(): Unable to open registry key '%s'!", registry_path);
+		this->logEvent(pTemp, S_ERROR);
 		return 1;
 	}
 
     return rc;
 }
 
-int Service::Run( void )
+int Service::run( void )
 {
 	this->is_running = true;
-	this->StartProcess();
+	this->startProcess();
 
     while(this->is_running)
 	{
@@ -360,36 +368,36 @@ int Service::Run( void )
 		{
 			if(dwCode != STILL_ACTIVE)
 			{
-				if(this->StartProcess())
+				if(this->startProcess())
 				{
-					this->LogEvent("Run: Restarted process ok.\n", S_WARN);
+					this->logEvent("run: Restarted process ok.\n", S_WARN);
 				}
 			}
 		}
 		else 
 		{
-			long nError = GetLastError();
+			long nError = getLastError();
 			char pTemp[1024];
-			sprintf(pTemp,"Service::Run: unable to start service! Error code = %d\n", nError); 
-			this->LogEvent(pTemp, S_ERROR);
+			sprintf(pTemp,"Service::run: unable to start service! Error code = %d\n", nError); 
+			this->logEvent(pTemp, S_ERROR);
 		}
 
 		// Log any child process console activity to the log file:
 		//
-		//this->ReadWriteOutErrFromPipe();
+		//this->readWriteOutErrFromPipe();
 
 		// Wait a bit so we're not hogging CPU time too much.
 		Sleep(1000);
 	}
     
 	// Ok, time to exit tell out child process to stop as well.
-	this->EndProcess();
+	this->stopProcess();
 
 	return NO_ERROR; 
 }
 
 // Set description
-bool Service::SetDescription(std::string description)
+bool Service::setDescription(std::string description)
 {
     bool rc = false;
 	SERVICE_DESCRIPTION sd;
@@ -416,8 +424,8 @@ bool Service::SetDescription(std::string description)
 			sd.lpDescription = szDesc;
 
 			char pTemp[SERVICE_DESC_MAX_LENGTH + 255] = "";
-			sprintf(pTemp, "Service::SetDescription(): set to '%s'!", description.c_str());
-			this->LogEvent(pTemp, S_WARN);
+			sprintf(pTemp, "Service::setDescription(): set to '%s'!", description.c_str());
+			this->logEvent(pTemp, S_WARN);
 
 			// Now attempt to change the service type:
 			rc = ChangeServiceConfig2(
@@ -441,7 +449,7 @@ bool Service::SetDescription(std::string description)
 // If the operation was successfull true will be returned
 // otherwise false will indicate an error.
 //
-bool Service::InteractiveState(bool interactive_state)
+bool Service::interactiveState(bool interactive_state)
 {
     bool rc = false;
 
@@ -464,11 +472,11 @@ bool Service::InteractiveState(bool interactive_state)
 			{
 				// set up interactive flags:
 				service_type = SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS;
-				this->LogEvent("interactiveState: ON.", S_INFO);
+				this->logEvent("interactiveState: ON.", S_INFO);
 			}
 			else
 			{
-				this->LogEvent("interactiveState: OFF.", S_INFO);
+				this->logEvent("interactiveState: OFF.", S_INFO);
 			}
 
 			// Now attempt to change the service type:
@@ -497,19 +505,19 @@ bool Service::InteractiveState(bool interactive_state)
 
 // Called by windows to stop the service running.
 //
-void Service::OnStop( void )
+void Service::onStop( void )
 {
-	this->LogEvent("Service::OnStop - Exit time", S_INFO);
+	this->logEvent("Service::onStop - Exit time", S_INFO);
 	this->is_running = false;
-	this->EndProcess();
+	this->stopProcess();
 }
 
 
 // Make an attempt to start the child process. If this fails we'll
-// be called again by Run() when it detects the child process is
+// be called again by run() when it detects the child process is
 // no longer running.
 //
-bool Service::StartProcess()
+bool Service::startProcess()
 {
 	bool job_assign = FALSE;
 	bool rc = FALSE;
@@ -531,7 +539,7 @@ bool Service::StartProcess()
 	// 
 	if (! CreatePipe(&this->childStd_OUT_tmp, &this->childStd_OUT_Write, &this->security_attrib, 0)) 
 	{
-        this->LogEvent(TEXT("Stdout Create Pipe failed!"), S_ERROR); 
+        this->logEvent(TEXT("Stdout Create Pipe failed!"), S_ERROR); 
 	}
 
     // Create a duplicate of the output write handle for the std error
@@ -546,7 +554,7 @@ bool Service::StartProcess()
 		TRUE,DUPLICATE_SAME_ACCESS)
 	) 
 	{
-        this->LogEvent("Service::StartProcess - DuplicateHandle stdout for stderr handler failed!", S_ERROR);
+        this->logEvent("Service::startProcess - DuplicateHandle stdout for stderr handler failed!", S_ERROR);
 	}
 
     // Create new output read handle and the input write handles. Set
@@ -563,13 +571,13 @@ bool Service::StartProcess()
         DUPLICATE_SAME_ACCESS)
 	)
 	{
-        this->LogEvent("Service::StartProcess - DuplicateHandle failed!", S_ERROR);
+        this->logEvent("Service::startProcess - DuplicateHandle failed!", S_ERROR);
 	}
 
 	// Close inheritable copies of the handles you do not want to be
     // inherited.
 	if (!CloseHandle(this->childStd_OUT_tmp)) {
-		this->LogEvent("Service::StartProcess - close childStd_OUT_tmp failed!", S_ERROR);
+		this->logEvent("Service::startProcess - close childStd_OUT_tmp failed!", S_ERROR);
 	}
 
 	STARTUPINFO si;
@@ -587,7 +595,7 @@ bool Service::StartProcess()
 		si.wShowWindow = SW_SHOWNORMAL;
 		si.lpDesktop = NULL; 
 		si.dwFlags |= STARTF_USESHOWWINDOW;
-		this->LogEvent("Service::StartProcess - setting up desktop interaction.", S_INFO);
+		this->logEvent("Service::startProcess - setting up desktop interaction.", S_INFO);
 	}
 
 	// Disable stdout for the moment
@@ -613,22 +621,22 @@ bool Service::StartProcess()
         this->process_info     // Pointer to PROCESS_INFORMATION structure
     )) 
     {
-		sprintf(pTemp,"Service::StartProcess: '%s' OK.\n", process_name); 
-		this->LogEvent(pTemp, S_INFO);
+		sprintf(pTemp,"Service::startProcess: '%s' OK.\n", process_name); 
+		this->logEvent(pTemp, S_INFO);
         rc = TRUE;
 
 		job_assign = AssignProcessToJobObject(this->job_processes, this->process_info->hProcess);
 		if(!(job_assign))
 		{
-			sprintf(pTemp,"Service::StartProcess: error adding the new running process to our job.\n"); 
-			this->LogEvent(pTemp, S_ERROR);
+			sprintf(pTemp,"Service::startProcess: error adding the new running process to our job.\n"); 
+			this->logEvent(pTemp, S_ERROR);
 		}
     }
 	else
 	{
-		long err_code = GetLastError();
-		sprintf(pTemp,"Service::StartProcess: '%s' FAIL. Error code '%d'.\n", process_name, err_code); 
-	    this->LogEvent(pTemp, S_ERROR);
+		long err_code = getLastError();
+		sprintf(pTemp,"Service::startProcess: '%s' FAIL. Error code '%d'.\n", process_name, err_code); 
+	    this->logEvent(pTemp, S_ERROR);
 	}
 
 	// Close pipe handles (do not continue to modify the parent).
@@ -636,16 +644,16 @@ bool Service::StartProcess()
     // output pipe are maintained in this process or else the pipe will
     // not close when the child process exits and the ReadFile will hang.
 	if (!CloseHandle(this->childStd_OUT_Write)) {
-		this->LogEvent("Service::StartProcess - close childStd_OUT_Write failed!", S_ERROR);
+		this->logEvent("Service::startProcess - close childStd_OUT_Write failed!", S_ERROR);
 	}
 	if (!CloseHandle(this->childStd_ERR_Write)) {
-		this->LogEvent("Service::StartProcess - close childStd_ERR_Write failed!", S_ERROR);
+		this->logEvent("Service::startProcess - close childStd_ERR_Write failed!", S_ERROR);
 	}
 
 	return rc;
 }
 
-void Service::EndProcess()
+void Service::stopProcess()
 {
 	if (this->childStd_OUT_Read) {
 		CloseHandle(this->childStd_OUT_Read);
@@ -684,7 +692,7 @@ void Service::EndProcess()
 // based on the service exe path. The exe should not be moved
 // once it has been set up!
 //
-void Service::InstallAid(char *exe_path)
+void Service::installAid(char *exe_path)
 {
 	long err_code = 0;
 	char reg_start[] = "SOFTWARE\\StationService\\Services\\";
@@ -700,8 +708,8 @@ void Service::InstallAid(char *exe_path)
 	if (exe_length >= max_exe_length) 
 	{
 		char pTemp[NAME_PATH_MAX_LENGTH + 255] = "";
-		sprintf(pTemp,"Service::InstallAid: exe path '%s' is too big. It must be >= %d.\n", exe_path, max_exe_length); 
-	    this->LogEvent(pTemp, S_ERROR);
+		sprintf(pTemp,"Service::installAid: exe path '%s' is too big. It must be >= %d.\n", exe_path, max_exe_length); 
+	    this->logEvent(pTemp, S_ERROR);
 
 		return;
 	}
@@ -743,25 +751,25 @@ void Service::InstallAid(char *exe_path)
 
 	    if (rc != ERROR_SUCCESS)
 	    {
-			err_code = GetLastError();
+			err_code = getLastError();
 			char pTemp[REG_PATH_MAX_LENGTH + 1024] = "";
-			sprintf(pTemp,"Service::InstallAid: Could not set 'config_file' in registry '%s'! Error '%d'.\n", 
+			sprintf(pTemp,"Service::installAid: Could not set 'config_file' in registry '%s'! Error '%d'.\n", 
 				registry_path,
 				err_code
 			); 
-			this->LogEvent(pTemp, S_ERROR);
+			this->logEvent(pTemp, S_ERROR);
 	    }
         RegCloseKey(service_key);
 	}
 	else
 	{
-		err_code = GetLastError();
+		err_code = getLastError();
 		char pTemp[REG_PATH_MAX_LENGTH + 255] = "";
-		sprintf(pTemp,"Service::InstallAid: Unable to create/open '%s'! Error '%d'.\n", 
+		sprintf(pTemp,"Service::installAid: Unable to create/open '%s'! Error '%d'.\n", 
 			registry_path,
 			err_code
 		); 
-		this->LogEvent(pTemp, S_ERROR);
+		this->logEvent(pTemp, S_ERROR);
 	}
 }
 
@@ -769,17 +777,17 @@ void Service::InstallAid(char *exe_path)
 // Uninstall the registry config for this service instance.
 //
 //
-void Service::UnInstallAid(void)
+void Service::uninstallAid(void)
 {
 }
 
 
 // Write a chunk from the childs STDOUT/STDERR to the log file. This 
-// method is called periodically from the Run() method, it is not 
+// method is called periodically from the run() method, it is not 
 // really meant to be used outside of this method. If the log file is
 // not set up then no action is taken.
 //
-void Service::ReadWriteOutErrFromPipe(void)
+void Service::readWriteOutErrFromPipe(void)
 { 
 	int rc = 0;
     DWORD read, written, available; 
@@ -800,11 +808,11 @@ void Service::ReadWriteOutErrFromPipe(void)
 	   //  Read in some output...
 	   if (this->childStd_OUT_Read) 
 	   {
-		   // Don't block waiting for input as this will prevent Run() from 
+		   // Don't block waiting for input as this will prevent run() from 
 		   // monitoring and working correctly. It will be stuck at this 
 		   // point otherwise.
 		   //
-           this->LogEvent("Service::ReadWriteOutErrFromPipe: checking for output.", S_INFO);
+           this->logEvent("Service::readWriteOutErrFromPipe: checking for output.", S_INFO);
 
 		   rc = SetCommTimeouts(this->childStd_OUT_Read, &noblockingallowed);
            //rc = PeekNamedPipe(this->childStd_OUT_Read, NULL, 0, NULL, &available, NULL);
@@ -812,16 +820,16 @@ void Service::ReadWriteOutErrFromPipe(void)
 		   {
 			   success = ReadFile(this->childStd_OUT_Read, buffer, min(BUFSIZE, available), &read, NULL);
 			   if(!success || read == 0) {
-   				   this->LogEvent("Service::ReadWriteOutErrFromPipe: stdout closed?", S_INFO);
+   				   this->logEvent("Service::readWriteOutErrFromPipe: stdout closed?", S_INFO);
 				   return; 
 			   }
 			   else
 			   {
-   				   this->LogEvent("Service::ReadWriteOutErrFromPipe: HERE HERE 2.1.2", S_INFO);
+   				   this->logEvent("Service::readWriteOutErrFromPipe: HERE HERE 2.1.2", S_INFO);
 
 				   char pTemp[BUFSIZE + 255] = "";
-				   sprintf(pTemp,"Service::ReadWriteOutErrFromPipe: '%s'", buffer); 
-				   this->LogEvent(pTemp, S_INFO);
+				   sprintf(pTemp,"Service::readWriteOutErrFromPipe: '%s'", buffer); 
+				   this->logEvent(pTemp, S_INFO);
 
 				   // ... and write this output to the log file if any was found.
 				   //success = WriteFile(this->log_file, buffer, read, &written, NULL);
@@ -832,7 +840,7 @@ void Service::ReadWriteOutErrFromPipe(void)
 		   }
 		   else
 		   {
-//               this->LogEvent("Service::ReadWriteOutErrFromPipe: no stdout output.", S_INFO);
+//               this->logEvent("Service::readWriteOutErrFromPipe: no stdout output.", S_INFO);
 		   }
 	   }
 	}

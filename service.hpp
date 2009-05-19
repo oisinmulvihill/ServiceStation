@@ -1,3 +1,11 @@
+/*
+
+See License.txt to see what this project is licensed under.
+
+Oisin Mulvihill
+2009-04-20
+
+*/
 #ifndef _the_service_h_
 #define _the_service_h_
 
@@ -10,7 +18,7 @@
 
 #define BUFSIZE 4096 
  
-// LogEvent: levels
+// logEvent: levels
 //
 #define S_INFO 1
 #define S_WARN 2
@@ -60,42 +68,42 @@ private:
 protected:
     
 	// Called when the service starts up to set the service up based in registry indicated config file.
-	DWORD Init(DWORD argc, LPTSTR* argv);
+	DWORD init(DWORD argc, LPTSTR* argv);
 
-	// Called directly after a successfull call to Init(). Start the child
+	// Called directly after a successfull call to init(). Start the child
 	// process and monitor it, restarting as needed. Log the stdout/err to
 	// file.
 	//
-    int Run();
+    int run();
 
 	// Set a note about what this service does:
-	bool SetDescription(std::string description);
+	bool setDescription(std::string description);
 
 	// true: enable desktop interaction, false: disable interaction.
-	bool InteractiveState(bool interactive_state);
+	bool interactiveState(bool interactive_state);
 
 	// Called when its time to stop the service runing.
-    void OnStop(void);
+    void onStop(void);
 
 	// Start the child process running.
-	bool StartProcess(void);
+	bool startProcess(void);
 
 	// Stop the child process terminating it if needs be.
-	void EndProcess(void);
+	void stopProcess(void);
 
 	// Load the service insance configuration.
-	int SetupFromConfiguration(void);
-	int SetupFromConfiguration(const char *config_filename);
+	int setupFromConfiguration(void);
+	int setupFromConfiguration(const char *config_filename);
 
 	// Log a message to the window event log.
-	void LogEvent(const char *message, int level);
+	void logEvent(const char *message, int level);
 
 	// Log some child process stdout/err to file:
-	void Service::ReadWriteOutErrFromPipe(void);
+	void readWriteOutErrFromPipe(void);
 
 	// Add / Remove this instances registries settings.
-	void InstallAid(char *exe_path);
-	void UnInstallAid(void);
+	void installAid(char *exe_path);
+	void uninstallAid(void);
 
 public:
 	Service(

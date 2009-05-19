@@ -1,3 +1,11 @@
+/*
+
+See License.txt to see what this project is licensed under.
+
+Oisin Mulvihill
+2009-04-20
+
+*/
 #include "service.hpp"
 #include "SimpleOpt.h"
 
@@ -21,7 +29,7 @@ void WINAPI serviceControl(DWORD opcode)
 {
 	if (service) 
 	{
-	    service->Control(opcode);
+	    service->control(opcode);
 	}
 }
 
@@ -123,10 +131,10 @@ DWORD main(int argc, char *argv[])
     
 	if(install_service)
 	{
-		rc = service->SetupFromConfiguration();
+		rc = service->setupFromConfiguration();
 		if (rc != NO_ERROR) 
 		{
-			// This means we are probably running in service mode. The Init() 
+			// This means we are probably running in service mode. The init() 
 			// call will attempt to use the registry to recover and setup the 
 			// service. If this fails the service will be stopped correctly,
 			// which we can't do at this stage.
@@ -148,10 +156,10 @@ DWORD main(int argc, char *argv[])
 	}
     else if(remove_service)
 	{
-		rc = service->SetupFromConfiguration();
+		rc = service->setupFromConfiguration();
 		if (rc != NO_ERROR) 
 		{
-			// This means we are probably running in service mode. The Init() 
+			// This means we are probably running in service mode. The init() 
 			// call will attempt to use the registry to recover and setup the 
 			// service. If this fails the service will be stopped correctly,
 			// which we can't do at this stage.
@@ -177,7 +185,7 @@ DWORD main(int argc, char *argv[])
 		std::cout << "Starting '" << service->GetName() << "'." << std::endl;
         service->Startup();
 		std::cout << "Started '" << service->GetName() << "' ok." << std::endl;
-	    exitcode = service->GetExitCode();
+	    exitcode = service->getExitCode();
 	}
 
     delete service;

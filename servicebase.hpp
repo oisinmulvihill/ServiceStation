@@ -72,19 +72,19 @@ public:
 	);
     virtual ~ServiceBase(void);
 
-	int setupFromConfiguration();
-	int setupFromConfiguration(const char *config_filename);
+	virtual int setupFromConfiguration();
+	virtual int setupFromConfiguration(const char *config_filename);
+    
+	void setName(std::string new_name);
+	const char * getName(void);
 
-	void SetName(std::string new_name);
-	const char * GetName(void);
-
-    virtual DWORD Startup(void);
-    virtual int Service(DWORD argc, LPTSTR* argv);    
+    virtual DWORD startUp(void);
+    virtual int service(DWORD argc, LPTSTR* argv);    
     virtual void control(DWORD opcode);
 
-    virtual bool IsInstalled(void);
-    virtual bool Install(void);
-    virtual bool UnInstall(void);
+    virtual bool isInstalled(void);
+    virtual bool install(void);
+    virtual bool unInstall(void);
 
     virtual DWORD getLastError(void);    
     virtual DWORD getExitCode(void);    

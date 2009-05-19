@@ -133,9 +133,9 @@ void Service::logEvent(const char *message, int level)
 			break;
 	}
 
-	HANDLE event_source = RegisterEventSource(NULL, this->GetName());      
+	HANDLE event_source = RegisterEventSource(NULL, this->getName());      
 	if(event_source == NULL) {
-		std::cerr << "Unable to register source: '" << this->GetName() << "'." << std::endl;     
+		std::cerr << "Unable to register source: '" << this->getName() << "'." << std::endl;     
 	}
 	else
 	{
@@ -166,6 +166,8 @@ void Service::logEvent(const char *message, int level)
 //
 int Service::setupFromConfiguration(void)
 {
+	// set this name temporarily so loggin will work:
+	this->setName("ServiceStation");
 	return this->setupFromConfiguration(this->config_file);
 }
 
@@ -189,17 +191,24 @@ int Service::setupFromConfiguration(const char *config_filename)
 	// Create the process job which we'll use to contain our processes in:
 	// ref: http://msdn.microsoft.com/en-us/library/ms684161.aspx
 	//
-	this->job_processes = CreateJobObject(NULL, "servicestation-jobs");
+	char unique_name[255];
+	ZeroMemory(unique_name, 255);
+	sprintf(unique_name, "servicestation-job-%d", getpid());
+
+	this->job_processes = CreateJobObject(NULL, unique_name);
 	if (!(this->job_processes))
 	{
-		this->logEvent("Error creating service station job container!", S_ERROR);
+		long err = getLastError();
+		char pTemp[1024];
+		sprintf(pTemp,"Error creating job container for job name '%s'! Windows Error code = %d\n", unique_name, err); 
+		this->logEvent(pTemp, S_ERROR);
 		return 1;
 	}
 
 	// Set up the name of this service:
 	//
 	std::string service_name = ini.GetValue("service", "name", "ServiceStation");
-	this->SetName(service_name);
+	this->setName(service_name);
 
 	// Set the service description based on what we find in the config file:
 	//

@@ -9,7 +9,7 @@ Oisin Mulvihill
 #include "service.hpp"
 #include "SimpleOpt.h"
 
-#define SERVICESTATION_VERSION "1.0.4"
+#define SERVICESTATION_VERSION "1.0.5"
 
 ServiceBase *service = NULL;
 
@@ -21,7 +21,7 @@ void WINAPI serviceMain(DWORD argc, LPTSTR *argv)
 {
 	if (service) 
 	{
-		service->Service(argc, argv);
+		service->service(argc, argv);
 	}
 }
 
@@ -131,6 +131,29 @@ DWORD main(int argc, char *argv[])
     
 	if(install_service)
 	{
+		// Test file read and get error code for accessing it to aid debugging:
+		HANDLE fd = NULL;
+
+		fd = CreateFile(
+			(LPCSTR) config_file.c_str(),
+			GENERIC_READ,
+			FILE_SHARE_READ,
+			NULL,
+			OPEN_EXISTING,
+			FILE_ATTRIBUTE_NORMAL,
+			NULL
+		);
+
+		if (fd == INVALID_HANDLE_VALUE)
+		{
+			std::cout << "Windows Error error: '" 
+				      << GetLastError() 
+					  << "' opening '" 
+					  << (const char *) config_file.c_str() 
+					  << "'." << std::endl;
+		}
+		CloseHandle(fd);
+
 		rc = service->setupFromConfiguration();
 		if (rc != NO_ERROR) 
 		{
@@ -147,10 +170,10 @@ DWORD main(int argc, char *argv[])
 			// What we have configured / defaults set up:
 			//
 			std::cout << "config_file '" << (const char *) config_file.c_str() << "'." << std::endl;
-			std::cout << "service_name '" << service->GetName() << "'." << std::endl;
+			std::cout << "service_name '" << service->getName() << "'." << std::endl;
 
 			std::cout << "Installing... " << std::endl;
-			service->Install();
+			service->install();
 			std::cout << "Installed ok." << std::endl;
 		}
 	}
@@ -172,19 +195,19 @@ DWORD main(int argc, char *argv[])
 			// What we have configured / defaults set up:
 			//
 			std::cout << "config_file '" << (const char *) config_file.c_str() << "'." << std::endl;
-			std::cout << "service_name '" << service->GetName() << "'." << std::endl;
+			std::cout << "service_name '" << service->getName() << "'." << std::endl;
 
 			std::cout << "Uninstalling... " << std::endl;
-	        service->UnInstall();
+	        service->unInstall();
 			std::cout << "Uninstalled ok." << std::endl;
 		}
 	}
 	else
 	{
 		// Default action which windows services will fall through too.
-		std::cout << "Starting '" << service->GetName() << "'." << std::endl;
-        service->Startup();
-		std::cout << "Started '" << service->GetName() << "' ok." << std::endl;
+		std::cout << "Starting '" << service->getName() << "'." << std::endl;
+        service->startUp();
+		std::cout << "Started '" << service->getName() << "' ok." << std::endl;
 	    exitcode = service->getExitCode();
 	}
 

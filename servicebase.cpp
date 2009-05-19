@@ -39,7 +39,7 @@ ServiceBase::ServiceBase(
 )
 {
 	// Store the control function and service main which in a 
-	// round-about fashion will refer to control() and Service()
+	// round-about fashion will refer to control() and service()
 	//
     this->service_control = service_control;
     this->service_main = service_main;
@@ -75,14 +75,14 @@ int ServiceBase::setupFromConfiguration(const char *config_filename)
 }
 
 // Change the current service name:
-void ServiceBase::SetName(std::string new_name) 
+void ServiceBase::setName(std::string new_name) 
 {
 	copy_text(this->service_name, new_name.c_str(), SERVICE_NAME_MAX_LEN, new_name.length());
 }
 
 
 // Recover the current service name:
-const char * ServiceBase::GetName(void) 
+const char * ServiceBase::getName(void) 
 {
 	return (const char *) this->service_name;
 }
@@ -90,7 +90,7 @@ const char * ServiceBase::GetName(void)
 
 // Called to start up the service and run.
 //
-DWORD ServiceBase::Startup(void)
+DWORD ServiceBase::startUp(void)
 {
 	this->dispatch_table[0].lpServiceName = this->service_name;
     this->dispatch_table[0].lpServiceProc = this->service_main;
@@ -107,10 +107,10 @@ DWORD ServiceBase::Startup(void)
 // The service main which windows calls when starting the service. The
 // first argument should be the name the service was started with.
 //
-int ServiceBase::Service(DWORD argc, LPTSTR* argv)
+int ServiceBase::service(DWORD argc, LPTSTR* argv)
 {
 	std::string service_name = (char *)argv[0];
-	this->SetName(service_name);
+	this->setName(service_name);
 
 	// Perform any special actions such as configuration 
 	// recovery and service set up before we start running 
@@ -122,7 +122,7 @@ int ServiceBase::Service(DWORD argc, LPTSTR* argv)
         return this->error_code;
     }
     
-	this->service_stat = RegisterServiceCtrlHandler(_T(this->GetName()), this->service_control);
+	this->service_stat = RegisterServiceCtrlHandler(_T(this->getName()), this->service_control);
     if((SERVICE_STATUS_HANDLE)0 == this->service_stat)
 	{
         this->error_code = GetLastError();
@@ -184,10 +184,10 @@ void ServiceBase::control(DWORD opcode)
 }
 
 
-bool ServiceBase::Install(void)
+bool ServiceBase::install(void)
 {
 	// Don't reinstall if we've been already been:
-    if(IsInstalled())
+    if(isInstalled())
 	{
         return true;
 	}
@@ -203,7 +203,7 @@ bool ServiceBase::Install(void)
 	// which will be used to run the exe from.
 	//
     char file_path[_MAX_PATH];
-    ::GetModuleFileName(NULL, file_path, sizeof(file_path));
+    GetModuleFileName(NULL, file_path, sizeof(file_path));
 
 
 	// msdn create service ref: 
@@ -244,10 +244,10 @@ bool ServiceBase::Install(void)
 }
 
 // Remove the service if it is actually present.
-bool ServiceBase::UnInstall(void)
+bool ServiceBase::unInstall(void)
 {
 	// Only do this if it is actually installed!
-    if(!IsInstalled())
+    if(!isInstalled())
 	{
         return true;
 	}
@@ -291,7 +291,7 @@ DWORD ServiceBase::getLastError( void )
 // has been already. This is used to prevent over writting
 // and force removeal before reinstalling it.
 //
-bool ServiceBase::IsInstalled( void )
+bool ServiceBase::isInstalled( void )
 {
     bool rc = false;
 
